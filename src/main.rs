@@ -30,15 +30,14 @@ impl FromWorld for Track {
 
         let npc = Arc::clone(&new_points);
 
-        /*watch_location(move |lat, long| {
+        watch_location(move |lat, long| {
             let mut guard = npc.lock().unwrap();
             guard.push(Point {
                 lat: lat as f32,
                 long: long as f32,
             });
         });
-        */
-        spawn_local(async move {
+        /*spawn_local(async move {
             let mut counter = 0.0;
             loop {
                 TimeoutFuture::new(100).await;
@@ -49,7 +48,7 @@ impl FromWorld for Track {
                 });
                 counter += 1.0;
             }
-        });
+        });*/
 
         Track { points, new_points }
     }
