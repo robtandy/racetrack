@@ -22,6 +22,64 @@ struct Track {
     new_points: Arc<Mutex<Vec<Point>>>,
 }
 
+const fake_data: &[(f32, f32)] = &[
+    (41.2614911, -81.4245030),
+    (41.2614044, -81.4248437),
+    (41.2613177, -81.4248973),
+    (41.2612270, -81.4249268),
+    (41.2611221, -81.4249134),
+    (41.2609407, -81.4248517),
+    (41.2605939, -81.4244628),
+    (41.2604729, -81.4240497),
+    (41.2603842, -81.4235348),
+    (41.2598962, -81.4234650),
+    (41.2595575, -81.4232183),
+    (41.2592268, -81.4227033),
+    (41.2589768, -81.4224029),
+    (41.2587832, -81.4221239),
+    (41.2586139, -81.4219308),
+    (41.2585010, -81.4218128),
+    (41.2583155, -81.4215767),
+    (41.2581541, -81.4213300),
+    (41.2579444, -81.4210618),
+    (41.2577912, -81.4208472),
+    (41.2575734, -81.4205039),
+    (41.2573637, -81.4202464),
+    (41.2571621, -81.4199889),
+    (41.2570169, -81.4197636),
+    (41.2569363, -81.4194739),
+    (41.2569282, -81.4191091),
+    (41.2570653, -81.4187980),
+    (41.2573315, -81.4184439),
+    (41.2575976, -81.4181006),
+    (41.2577509, -81.4177895),
+    (41.2580009, -81.4175642),
+    (41.2581622, -81.4172530),
+    (41.2582751, -81.4169204),
+    (41.2583235, -81.4168131),
+    (41.2584042, -81.4165449),
+    (41.2586623, -81.4166522),
+    (41.2589849, -81.4167380),
+    (41.2592752, -81.4169955),
+    (41.2597753, -81.4174247),
+    (41.2600495, -81.4178753),
+    (41.2604205, -81.4186049),
+    (41.2605334, -81.4192057),
+    (41.2605656, -81.4199138),
+    (41.2605495, -81.4205360),
+    (41.2605495, -81.4211154),
+    (41.2606302, -81.4214158),
+    (41.2607108, -81.4216948),
+    (41.2608237, -81.4220166),
+    (41.2609689, -81.4223170),
+    (41.2610334, -81.4224672),
+    (41.2610979, -81.4226174),
+    (41.2610334, -81.4228106),
+    (41.2608882, -81.4230037),
+    (41.2607753, -81.4231968),
+    (41.2606140, -81.4233685),
+];
+
 impl Track {}
 impl FromWorld for Track {
     fn from_world(world: &mut World) -> Self {
@@ -30,25 +88,28 @@ impl FromWorld for Track {
 
         let npc = Arc::clone(&new_points);
 
-        watch_location(move |lat, long| {
+        /*watch_location(move |lat, long| {
             let mut guard = npc.lock().unwrap();
             guard.push(Point {
                 lat: lat as f32,
                 long: long as f32,
             });
-        });
-        /*spawn_local(async move {
-            let mut counter = 0.0;
+        });*/
+        spawn_local(async move {
+            let mut i = 0;
             loop {
-                TimeoutFuture::new(100).await;
+                TimeoutFuture::new(200).await;
                 let mut guard = npc.lock().unwrap();
                 guard.push(Point {
-                    long: -81.0 + counter,
-                    lat: 41.0 + counter,
+                    long: fake_data[i].0 * 10000.0,
+                    lat: fake_data[i].1 * 10000.0,
                 });
-                counter += 1.0;
+                i += 1;
+                if i >= fake_data.len() {
+                    i = 0;
+                }
             }
-        });*/
+        });
 
         Track { points, new_points }
     }
@@ -70,7 +131,8 @@ pub fn main() {
         primary_window: Some(Window {
             // provide the ID selector string here
             canvas: Some("#map-canvas".into()),
-            resolution: WindowResolution::new(500., 500.),
+            //resolution: WindowResolution::new(500., 500.),
+            fit_canvas_to_parent: true,
             ..default()
         }),
         ..default()
@@ -111,8 +173,8 @@ fn move_camera(
 
     transform.translation = Vec3::new(center_x, center_y, transform.translation.z);
 
-    let scale_x = (max_x - min_x) / w * 1.5;
-    let scale_y = (max_y - min_y) / h * 1.5;
+    let scale_x = (max_x - min_x) / w * 1.25;
+    let scale_y = (max_y - min_y) / h * 1.25;
 
     //window.resolution.set_scale_factor(scale_x.min(scale_y));
     info!("current scale factor {}", window.resolution.scale_factor());
@@ -140,7 +202,7 @@ fn check_for_new_points(
 
     for new_point in new_points.iter() {
         commands.spawn(MaterialMesh2dBundle {
-            mesh: Mesh2dHandle(meshes.add(Circle { radius: 3.0 })),
+            mesh: Mesh2dHandle(meshes.add(Circle { radius: 2.0 })),
             material: color_material.clone(),
             transform: Transform::from_xyz(new_point.lat, new_point.long, 0.0),
             ..default()
